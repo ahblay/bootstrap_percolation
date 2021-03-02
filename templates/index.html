@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+  <div class="container">
+    <!--
+    -->
+    <canvas class="dots"></canvas>
+    <div class="right">
+      <label for="game_type">Game Type:</label>
+      <select id="game_type">
+        <option value="two_player">Two Player</option>
+        <option value="single_player">Single Player</option>
+        <option value="sandbox">Sandbox</option>
+      </select>
+      <label for="s_moves">Spreader Moves:</label>
+      <input id="s_moves">
+      <label for="b_moves">Blocker Moves:</label>
+      <input id ="b_moves">
+      <label for="rows">Rows:</label>
+      <input id="rows">
+      <label for="cols">Columns:</label>
+      <input id="cols">
+      <label for="neighbors">neighbors:</label>
+      <input id="neighbors">
+      <input type="submit" id="submit">
+      <button type="button" id="run">Run percolation</button>
+      <button type="button" id="randomize">Randomize</button>
+    </div>
+  </div>
+  <script
+    src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous">
+  </script>
+  <script src="/static/game.js" type="text/javascript"></script>
+</body>
+</html>
