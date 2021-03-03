@@ -13,12 +13,12 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 
-@app.route('/')
+@app.route('/bootstrap_percolation')
 def index():
     return render_template('index.html')
 
 
-@app.route('/run_percolation', methods=['POST'])
+@app.route('/bootstrap_percolation/run_percolation', methods=['POST'])
 def run_percolation():
     starting_set = json.loads(request.form["startingSet"])
     print(starting_set)
