@@ -13,15 +13,14 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 
-@app.route('/bootstrap_percolation')
+@app.route('/')
 def index():
     return render_template('index.html')
 
 
-@app.route('/bootstrap_percolation/run_percolation', methods=['POST'])
+@app.route('/run_percolation', methods=['POST'])
 def run_percolation():
     starting_set = json.loads(request.form["startingSet"])
-    print(starting_set)
     rows = json.loads(request.form["rows"])
     cols = json.loads(request.form["cols"])
     game_type = request.form["gameType"]
@@ -31,8 +30,8 @@ def run_percolation():
 
     ss = []
 
-    for i in range(cols):
-        for j in range(rows):
+    for i in range(rows):
+        for j in range(cols):
             if starting_set[i][j] == 1:
                 ss.append((i, j))
 

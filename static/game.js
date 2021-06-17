@@ -1,14 +1,8 @@
 var canvas = $('canvas.dots');
-var canvasWidth = Math.round($(window).width() * 0.85);
+var canvasWidth = Math.round($(window).width() * 0.75);
 var canvasHeight = Math.round($(window).height() * 0.85);
 canvas.attr({height: canvasHeight, width: canvasWidth});
 var context = canvas[0].getContext('2d');
-
-// color canvas background
-context.beginPath();
-context.rect(0, 0, canvasWidth, canvasHeight);
-context.fillStyle = "blue";
-context.fill();
 
 var imgData;
 var percolating = true;
@@ -41,10 +35,11 @@ $("#submit").click(function() {
     b = Number($("#b_moves").val());
     neighbors = Number($("#neighbors").val());
     gameType = $("#game_type").val();
+    layers = Number($("#layers").val());
 
     resetCanvas();
     startingSet = [];
-    buildGrid(rows, cols);
+    buildGrid(rows, cols, layers);
 })
 
 function drawDot(x, y, radius, color, outline=false) {
@@ -60,7 +55,7 @@ function drawDot(x, y, radius, color, outline=false) {
     }
 }
 
-function buildGrid(rows, cols) {
+function buildGrid(rows, cols, layers) {
     var numRows = rows;
     var numCols = cols;
 
@@ -71,7 +66,7 @@ function buildGrid(rows, cols) {
     console.log("canvasHeight: " + canvasHeight);
 
     var dotWidth = canvasWidth / ((2 * numCols));
-    var dotHeight = canvasHeight/ ((2 * numRows));
+    var dotHeight = canvasHeight / ((2 * numRows));
 
     console.log("dotWidth: " + dotWidth);
     console.log("dotHeight: " + dotHeight);
@@ -310,8 +305,23 @@ function sandbox(e) {
     for (var i = 0; i < board.length; i ++) {
         if (board[i][0][0] <= x && x <= board[i][0][1]) {
             if (board[i][1][0] <= y && y <= board[i][1][1]) {
-                if (!board[i][2]) {
+                // if already chosen, color gray
+                if (board[i][2]) {
+                    console.log("uncolor this dot")
                     var results = getXY(board[i]);
+                    drawDot(results['x'], results['y'], results['radius'], baseColor);
+
+                    turnCounter--;
+
+                    rowIndex = Math.floor(i/cols);
+                    colIndex = i % cols;
+                    startingSet[rowIndex][colIndex] = 0;
+                    board[i][2] = false;
+                }
+
+                else {
+                    var results = getXY(board[i]);
+
                     drawDot(results['x'], results['y'], results['radius'], turn, true);
                     board[i][2] = true;
                     turnCounter++;
@@ -346,9 +356,10 @@ $('canvas.dots').click(function(e) {
 });
 
 $("#randomize").click(function() {
-
-    drawRandomDot(sColor);
-
+    numRand = Number($("#num_rand").val());
+    for (var i = 0; i < numRand; i++) {
+        drawRandomDot(sColor);
+    };
 })
 
 $("#run").click(function() {
