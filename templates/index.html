@@ -13,21 +13,25 @@
       <label for="game_type">Game Type:</label>
       <select id="game_type">
         <option value="sandbox">Sandbox</option>
+        <!--
         <option value="two_player">Two Player</option>
         <option value="single_player">Single Player</option>
+        -->
       </select>
 
+      <!--
       <label for="s_moves">Spreader Moves:</label>
       <input type="text" id="s_moves">
 
       <label for="b_moves">Blocker Moves:</label>
       <input type="text" id="b_moves">
+      -->
 
       <label for="rows">Rows:</label>
-      <input type="text"id="rows" value="5">
+      <input type="text"id="rows" value="3">
 
       <label for="cols">Columns:</label>
-      <input type="text" id="cols" value="5">
+      <input type="text" id="cols" value="12">
 
       <label for="layers">Layers:</label>
       <input type="text" id="layers" value="2">
@@ -36,10 +40,14 @@
       <input type="text" id="neighbors" value="3">
 
       <input type="submit" id="submit">
+
+      <input type="checkbox" id="animate" value="true">
+      <label for="animate">Animate percolation</label>
+
       <button type="button" id="run">Run percolation</button>
 
       <label for="neighbors">How many dots?</label>
-      <input type="text" id="num_rand">
+      <input type="text" id="num_rand" value="1">
 
       <button type="button" id="randomize">Randomize</button>
     </div>

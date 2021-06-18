@@ -18,8 +18,9 @@ var sColor = '#ff0000';
 var bColor = '#51beff';
 var turnCounter = 0;
 var gameType = 'two_player';
-var neighbors = 2
-var startingSet = []
+var neighbors = 2;
+var startingSet = [];
+var boardHeight = 0;
 
 function resetCanvas() {
     board = [];
@@ -66,7 +67,8 @@ function buildGrid(rows, cols, layers) {
     console.log("canvasHeight: " + canvasHeight);
 
     var dotWidth = canvasWidth / ((2 * numCols));
-    var dotHeight = canvasHeight / ((2 * numRows));
+    // vvv leave space for other layers to be drawn below vvv
+    var dotHeight = canvasHeight / ((layers * 2 * (numRows + layers - 1)));
 
     console.log("dotWidth: " + dotWidth);
     console.log("dotHeight: " + dotHeight);
@@ -77,6 +79,8 @@ function buildGrid(rows, cols, layers) {
         var dotDiameter = dotMargin = dotWidth;
     }
 
+    var boardHeight = (rows + 1) * dotDiameter * 2;
+
     console.log("dotDiameter: " + dotDiameter);
     console.log("dotMargin: " + dotMargin);
 
@@ -84,23 +88,29 @@ function buildGrid(rows, cols, layers) {
 
     console.log("dotRadius: " + dotRadius);
 
-    for (var i = 0; i < numRows; i++) {
-        rowArray = []
-        for (var j = 0; j < numCols; j++) {
-            rowArray.push(0);
-            var x = (j * (dotDiameter + dotMargin)) + dotMargin + dotRadius;
-            var y = (i * (dotDiameter + dotMargin)) + dotMargin + dotRadius;
-            drawDot(x, y, dotRadius, baseColor);
-            console.log("drawing dot: " + x + " " + y)
-            var xRange = [x - dotRadius, x + dotRadius];
-            var yRange = [y - dotRadius, y + dotRadius];
-            var coords = [xRange, yRange, false];
-            board.push(coords);
+    for (var k = 0; k < layers; k++) {
+        layerArray = [];
+        boardLayer = []
+        for (var i = 0; i < numRows; i++) {
+            rowArray = [];
+            for (var j = 0; j < numCols; j++) {
+                rowArray.push(0);
+                var x = (j * (dotDiameter + dotMargin)) + dotMargin + dotRadius;
+                var y = (i * (dotDiameter + dotMargin)) + dotMargin + dotRadius + (k * boardHeight);
+                drawDot(x, y, dotRadius, baseColor);
+                console.log("drawing dot: " + x + " " + y)
+                var xRange = [x - dotRadius, x + dotRadius];
+                var yRange = [y - dotRadius, y + dotRadius];
+                var coords = [xRange, yRange, false];
+                boardLayer.push(coords);
+            }
+            layerArray.push(rowArray);
         }
-        startingSet.push(rowArray);
+        startingSet.push(layerArray);
+        board.push(boardLayer);
     }
-
-    console.log('board length: ' + board.length)
+    console.log(board)
+    console.log('board length: ' + layers * board[0].length)
 };
 
 function getXY(dot) {
@@ -111,11 +121,14 @@ function getXY(dot) {
 };
 
 function drawRandomDot(color) {
+    // picks a random layer
+    l = Math.floor(Math.random() * layers);
+    console.log(l)
     r = Math.floor(Math.random() * (rows*cols + 1));
-    var xy = getXY(board[r]);
+    var xy = getXY(board[l][r]);
     rowIndex = Math.floor(r/cols);
     colIndex = r % cols;
-    startingSet[rowIndex][colIndex] = 1;
+    startingSet[l][rowIndex][colIndex] = 1;
     drawDot(xy['x'], xy['y'], xy['radius'], color, true);
     return
 }
@@ -238,14 +251,16 @@ function runPercolation(steps) {
     percolating = false;
     initialPosition = steps[0]
     step = steps[frames];
-    for (r = 0; r < step.length; r++) {
-        for (c = 0; c < step[r].length; c++) {
-            if (step[r][c] == 1) {
-                var xy = getXY(board[c+r*step[r].length]);
-                if (initialPosition[r][c] == 1) {
-                    drawDot(xy['x'], xy['y'], xy['radius'], sColor, true);
-                } else {
-                    drawDot(xy['x'], xy['y'], xy['radius'], sColor);
+    for (l = 0; l < step.length; l++) {
+        for (r = 0; r < step[l].length; r++) {
+            for (c = 0; c < step[l][r].length; c++) {
+                if (step[l][r][c] == 1) {
+                    var xy = getXY(board[l][c+r*step[l][r].length]);
+                    if (initialPosition[l][r][c] == 1) {
+                        drawDot(xy['x'], xy['y'], xy['radius'], sColor, true);
+                    } else {
+                        drawDot(xy['x'], xy['y'], xy['radius'], sColor);
+                    }
                 }
             }
         }
@@ -261,13 +276,18 @@ function runPercolation(steps) {
 }
 
 function beginPercolation(success, steps) {
+    console.log(success)
     console.log(steps)
     frames = 1
     percolating = true;
     if (steps.length > 1) {
         imgData = context.getImageData(0, 0, canvasWidth, canvasHeight);
-        interval = window.setInterval(function() {runPercolation(steps)}, 200);
+        interval = window.setInterval(function() {runPercolation(steps)}, 900);
     };
+};
+
+function stepByStepPercolation(success, steps) {
+    console.log('Percolating step by step...')
 };
 
 function twoPlayer(e) {
@@ -282,14 +302,16 @@ function twoPlayer(e) {
         turn = bColor;
     }
 
-    for (var i = 0; i < board.length; i ++) {
-        if (board[i][0][0] <= x && x <= board[i][0][1]) {
-            if (board[i][1][0] <= y && y <= board[i][1][1]) {
-                if (!board[i][2]) {
-                    var results = getXY(board[i]);
-                    drawDot(results['x'], results['y'], results['radius'], turn, true);
-                    board[i][2] = true;
-                    turnCounter++;
+    for (var l = 0; l < layers; l++) {
+        for (var i = 0; i < board[l].length; i ++) {
+            if (board[l][i][0][0] <= x && x <= board[l][i][0][1]) {
+                if (board[l][i][1][0] <= y && y <= board[l][i][1][1]) {
+                    if (!board[l][i][2]) {
+                        var results = getXY(board[l][i]);
+                        drawDot(results['x'], results['y'], results['radius'], turn, true);
+                        board[l][i][2] = true;
+                        turnCounter++;
+                    }
                 }
             }
         }
@@ -302,33 +324,35 @@ function sandbox(e) {
 
     var turn = sColor;
 
-    for (var i = 0; i < board.length; i ++) {
-        if (board[i][0][0] <= x && x <= board[i][0][1]) {
-            if (board[i][1][0] <= y && y <= board[i][1][1]) {
-                // if already chosen, color gray
-                if (board[i][2]) {
-                    console.log("uncolor this dot")
-                    var results = getXY(board[i]);
-                    drawDot(results['x'], results['y'], results['radius'], baseColor);
+    for (var l = 0; l < layers; l++) {
+        for (var i = 0; i < board[l].length; i++) {
+            if (board[l][i][0][0] <= x && x <= board[l][i][0][1]) {
+                if (board[l][i][1][0] <= y && y <= board[l][i][1][1]) {
+                    // if already chosen, color gray
+                    if (board[l][i][2]) {
+                        console.log("uncolor this dot")
+                        var results = getXY(board[l][i]);
+                        drawDot(results['x'], results['y'], results['radius'], baseColor);
 
-                    turnCounter--;
+                        turnCounter--;
 
-                    rowIndex = Math.floor(i/cols);
-                    colIndex = i % cols;
-                    startingSet[rowIndex][colIndex] = 0;
-                    board[i][2] = false;
-                }
+                        rowIndex = Math.floor(i/cols);
+                        colIndex = i % cols;
+                        startingSet[l][rowIndex][colIndex] = 0;
+                        board[l][i][2] = false;
+                    }
 
-                else {
-                    var results = getXY(board[i]);
+                    else {
+                        var results = getXY(board[l][i]);
 
-                    drawDot(results['x'], results['y'], results['radius'], turn, true);
-                    board[i][2] = true;
-                    turnCounter++;
+                        drawDot(results['x'], results['y'], results['radius'], turn, true);
+                        board[l][i][2] = true;
+                        turnCounter++;
 
-                    rowIndex = Math.floor(i/cols);
-                    colIndex = i % cols;
-                    startingSet[rowIndex][colIndex] = 1;
+                        rowIndex = Math.floor(i/cols);
+                        colIndex = i % cols;
+                        startingSet[l][rowIndex][colIndex] = 1;
+                    }
                 }
             }
         }
@@ -348,7 +372,10 @@ $('canvas.dots').click(function(e) {
     }
 
     console.log(turnCounter)
-    console.table(startingSet)
+    console.log(startingSet)
+    for (var i = 0; i < startingSet.length; i++) {
+        console.table(startingSet[i])
+    }
 
     if (turnCounter >= rows * cols) {
         beginPercolation();
@@ -364,15 +391,22 @@ $("#randomize").click(function() {
 
 $("#run").click(function() {
     console.log("Beginning percolation.")
+    var animate = $('#animate').is(":checked");
+    console.log(animate)
 
     $.post("/run_percolation", {"startingSet": JSON.stringify(startingSet),
                                 "rows": rows,
                                 "cols": cols,
+                                "layers": layers,
                                 "neighbors": neighbors,
                                 "gameType": gameType})
                                 .done(function(data) {
-                                    success = data["success"]
-                                    steps = JSON.parse(data["steps"])
-                                    beginPercolation(success, steps);
+                                    success = data["success"];
+                                    steps = JSON.parse(data["steps"]);
+                                    if (animate) {
+                                        beginPercolation(success, steps);
+                                    } else {
+                                        stepByStepPercolation(success, steps);
+                                    };
                                 });
 })

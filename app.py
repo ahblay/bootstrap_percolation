@@ -23,6 +23,7 @@ def run_percolation():
     starting_set = json.loads(request.form["startingSet"])
     rows = json.loads(request.form["rows"])
     cols = json.loads(request.form["cols"])
+    layers = json.loads(request.form["layers"])
     game_type = request.form["gameType"]
     neighbors = json.loads(request.form["neighbors"])
     print(starting_set)
@@ -30,14 +31,15 @@ def run_percolation():
 
     ss = []
 
-    for i in range(rows):
-        for j in range(cols):
-            if starting_set[i][j] == 1:
-                ss.append((i, j))
+    for l in range(layers):
+        for i in range(rows):
+            for j in range(cols):
+                if starting_set[l][i][j] == 1:
+                    ss.append((l, i, j))
 
     print(ss)
 
-    g = Grid((rows, cols))
+    g = Grid((layers, rows, cols))
     results = g.percolate(neighbors, ss)
     print(results)
     steps = json.dumps(results[1], cls=NumpyArrayEncoder)
