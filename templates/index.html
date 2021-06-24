@@ -41,15 +41,22 @@
 
       <input type="submit" id="submit">
 
-      <input type="checkbox" id="animate" value="true">
+      <input type="checkbox" id="animate" value="true" disabled>
       <label for="animate">Animate percolation</label>
 
-      <button type="button" id="run">Run percolation</button>
+      <button type="button" id="run" disabled>Run percolation</button>
+
+      <p>
+        <button class="arrow" id="left" disabled>&#8249;</button>
+        <button class="arrow" id="right" disabled>&#8250;</button>
+      </p>
 
       <label for="neighbors">How many dots?</label>
-      <input type="text" id="num_rand" value="1">
+      <input type="text" id="num_rand" value="1" disabled>
 
-      <button type="button" id="randomize">Randomize</button>
+      <button type="button" id="randomize" disabled>Randomize</button>
+
+      <h2 id="lower_bound">SA bound:</h2>
     </div>
   </div>
   <script

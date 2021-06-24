@@ -1,5 +1,5 @@
 import numpy as np
-import itertools
+import itertools, copy
 
 
 class Grid:
@@ -16,8 +16,10 @@ class Grid:
     def percolate(self, r, start_set):
         self.steps = []
         self.result = self.build_grid(self.shape)
+        temp = self.build_grid(self.shape)
         for vertex in start_set:
             self.result[vertex] = 1
+            temp[vertex] = 1
         iterations = 0
         active = True
         complete = False
@@ -29,9 +31,10 @@ class Grid:
                 if self.result[index] == 0:
                     complete = False
                     if self.get_neighbors(self.result, index) >= r:
-                        self.result[index] = 1
+                        temp[index] = 1
                         active = True
             iterations += 1
+            self.result = copy.deepcopy(temp)
         return complete, self.steps
 
     def get_neighbors(self, grid, index):

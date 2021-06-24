@@ -21,6 +21,9 @@ var gameType = 'two_player';
 var neighbors = 2;
 var startingSet = [];
 var boardHeight = 0;
+var steps = [];
+var success = false;
+var frameIndex = 0;
 
 function resetCanvas() {
     board = [];
@@ -41,7 +44,22 @@ $("#submit").click(function() {
     resetCanvas();
     startingSet = [];
     buildGrid(rows, cols, layers);
+
+    $("#run").prop('disabled', false);
+    $("#animate").prop('disabled', false);
+    $("#num_rand").prop('disabled', false);
+    $("#randomize").prop('disabled', false);
+
+    $("#left").prop('disabled', true);
+    $("#right").prop('disabled', true);
+
+    $("#lower_bound").empty();
+    $("#lower_bound").append("SA bound: " + "0/" + calculateLowerBound(rows, cols, layers))
 })
+
+function calculateLowerBound(x, y, z) {
+    return Math.round(100 * ((x*y + y*z + z*x)/3)) / 100;
+};
 
 function drawDot(x, y, radius, color, outline=false) {
     context.clearRect(x-(radius*1.1), y-(radius*1.1), 2.2*radius, 2.2*radius);
@@ -282,12 +300,8 @@ function beginPercolation(success, steps) {
     percolating = true;
     if (steps.length > 1) {
         imgData = context.getImageData(0, 0, canvasWidth, canvasHeight);
-        interval = window.setInterval(function() {runPercolation(steps)}, 900);
+        interval = window.setInterval(function() {runPercolation(steps)}, 600);
     };
-};
-
-function stepByStepPercolation(success, steps) {
-    console.log('Percolating step by step...')
 };
 
 function twoPlayer(e) {
@@ -335,6 +349,8 @@ function sandbox(e) {
                         drawDot(results['x'], results['y'], results['radius'], baseColor);
 
                         turnCounter--;
+                        $("#lower_bound").empty();
+                        $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
 
                         rowIndex = Math.floor(i/cols);
                         colIndex = i % cols;
@@ -347,7 +363,10 @@ function sandbox(e) {
 
                         drawDot(results['x'], results['y'], results['radius'], turn, true);
                         board[l][i][2] = true;
+
                         turnCounter++;
+                        $("#lower_bound").empty();
+                        $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
 
                         rowIndex = Math.floor(i/cols);
                         colIndex = i % cols;
@@ -387,7 +406,64 @@ $("#randomize").click(function() {
     for (var i = 0; i < numRand; i++) {
         drawRandomDot(sColor);
     };
-})
+});
+
+$("#left").click(function() {
+    console.log("Displaying previous percolation frame...");
+    frameIndex--;
+
+    $("#right").prop('disabled', false);
+    initialPosition = steps[0];
+
+    step = steps[frameIndex];
+    for (l = 0; l < step.length; l++) {
+        for (r = 0; r < step[l].length; r++) {
+            for (c = 0; c < step[l][r].length; c++) {
+                var xy = getXY(board[l][c+r*step[l][r].length]);
+                drawDot(xy['x'], xy['y'], xy['radius'], baseColor);
+                if (step[l][r][c] == 1) {
+                    if (initialPosition[l][r][c] == 1) {
+                        drawDot(xy['x'], xy['y'], xy['radius'], sColor, true);
+                    } else {
+                        drawDot(xy['x'], xy['y'], xy['radius'], sColor);
+                    }
+                }
+            }
+        }
+    }
+
+    if (frameIndex - 1 < 0) {
+        $("#left").prop('disabled', true);
+    }
+});
+
+$("#right").click(function() {
+    console.log("Displaying next percolation frame...")
+    frameIndex++;
+
+    $("#left").prop('disabled', false);
+    initialPosition = steps[0];
+
+    step = steps[frameIndex];
+    for (l = 0; l < step.length; l++) {
+        for (r = 0; r < step[l].length; r++) {
+            for (c = 0; c < step[l][r].length; c++) {
+                if (step[l][r][c] == 1) {
+                    var xy = getXY(board[l][c+r*step[l][r].length]);
+                    if (initialPosition[l][r][c] == 1) {
+                        drawDot(xy['x'], xy['y'], xy['radius'], sColor, true);
+                    } else {
+                        drawDot(xy['x'], xy['y'], xy['radius'], sColor);
+                    }
+                }
+            }
+        }
+    }
+
+    if (frameIndex + 1 >= steps.length) {
+        $("#right").prop('disabled', true);
+    }
+});
 
 $("#run").click(function() {
     console.log("Beginning percolation.")
@@ -406,7 +482,13 @@ $("#run").click(function() {
                                     if (animate) {
                                         beginPercolation(success, steps);
                                     } else {
-                                        stepByStepPercolation(success, steps);
+                                        //stepByStepPercolation(success, steps);
+                                        // highlight arrow buttons
+                                        frameIndex = 0;
+
+                                        if (frameIndex + 1 < steps.length) {
+                                            $("#right").prop('disabled', false);
+                                        };
                                     };
                                 });
 })
