@@ -1,6 +1,6 @@
 var canvas = $('canvas.dots');
 var canvasWidth = Math.round($(window).width() * 0.75);
-var canvasHeight = Math.round($(window).height() * 0.85);
+var canvasHeight = Math.round($(window).height() * 0.95);
 canvas.attr({height: canvasHeight, width: canvasWidth});
 var context = canvas[0].getContext('2d');
 
@@ -54,7 +54,9 @@ $("#submit").click(function() {
     $("#right").prop('disabled', true);
 
     $("#lower_bound").empty();
-    $("#lower_bound").append("SA bound: " + "0/" + calculateLowerBound(rows, cols, layers))
+    $("#lower_bound").append("SA bound: " + "0/" + calculateLowerBound(rows, cols, layers));
+
+    $("#num_rand").val(calculateLowerBound(rows, cols, layers));
 })
 
 function calculateLowerBound(x, y, z) {
@@ -68,9 +70,13 @@ function drawDot(x, y, radius, color, outline=false) {
     context.fillStyle = color;
     context.fill();
     if (outline && color == sColor) {
+        /*
         context.strokeStyle = "black";
-        context.lineWidth = 4;
+        context.lineWidth = radius / 7;
         context.stroke();
+        */
+        context.fillStyle = 'black';
+        context.fill();
     }
 }
 
@@ -86,7 +92,7 @@ function buildGrid(rows, cols, layers) {
 
     var dotWidth = canvasWidth / ((2 * numCols));
     // vvv leave space for other layers to be drawn below vvv
-    var dotHeight = canvasHeight / ((layers * 2 * (numRows + layers - 1)));
+    var dotHeight = canvasHeight / (2 * (numRows * layers + (layers - 1)));
 
     console.log("dotWidth: " + dotWidth);
     console.log("dotHeight: " + dotHeight);
@@ -142,13 +148,24 @@ function drawRandomDot(color) {
     // picks a random layer
     l = Math.floor(Math.random() * layers);
     console.log(l)
-    r = Math.floor(Math.random() * (rows*cols + 1));
+    r = Math.floor(Math.random() * (rows*cols));
+    console.log(board[l][r])
     var xy = getXY(board[l][r]);
     rowIndex = Math.floor(r/cols);
     colIndex = r % cols;
-    startingSet[l][rowIndex][colIndex] = 1;
-    drawDot(xy['x'], xy['y'], xy['radius'], color, true);
-    return
+    if (startingSet[l][rowIndex][colIndex] == 0) {
+        board[l][r][2] = true;
+
+        startingSet[l][rowIndex][colIndex] = 1;
+        drawDot(xy['x'], xy['y'], xy['radius'], color, true);
+
+        turnCounter++;
+        $("#lower_bound").empty();
+        $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+        return true;
+    } else {
+        return false;
+    };
 }
 
 function rgbToHex(r, g, b) {
@@ -401,10 +418,26 @@ $('canvas.dots').click(function(e) {
     }
 });
 
+$("#num_rand").on('input', function() {
+    numRand = Number($("#num_rand").val());
+    if (turnCounter + numRand > layers * rows * cols) {
+        $("#randomize").prop('disabled', true);
+    } else {
+        $("#randomize").prop('disabled', false);
+    }
+});
+
 $("#randomize").click(function() {
     numRand = Number($("#num_rand").val());
-    for (var i = 0; i < numRand; i++) {
-        drawRandomDot(sColor);
+    counter = 0;
+    while (counter < numRand) {
+        success = drawRandomDot(sColor);
+        if (success) {
+            counter++;
+        };
+    };
+    if (turnCounter + numRand > layers * rows * cols) {
+        $("#randomize").prop('disabled', true);
     };
 });
 
