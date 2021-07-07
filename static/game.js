@@ -447,6 +447,10 @@ function parseFile(file) {
     buildGrid(rows, cols, layers);
     initializeProperties(rows, cols, layers);
 
+    $('#rows').val(rows);
+    $('#cols').val(cols);
+    $('#layers').val(layers);
+
     return data;
 };
 
