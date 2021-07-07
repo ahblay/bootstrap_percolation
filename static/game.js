@@ -8,8 +8,8 @@ var imgData;
 var percolating = true;
 var frames = 1;
 
-var rows = 3;
-var cols = 3;
+var rows = 0;
+var cols = 0;
 var board = [];
 var s = 1;
 var b = 3;
@@ -17,34 +17,24 @@ var baseColor = '#d3d3d3';
 var sColor = '#ff0000';
 var bColor = '#51beff';
 var turnCounter = 0;
-var gameType = 'two_player';
-var neighbors = 2;
+var gameType = 'sandbox';
+var neighbors = 3;
 var startingSet = [];
 var boardHeight = 0;
 var steps = [];
 var success = false;
 var frameIndex = 0;
+var layers = 0;
 
 function resetCanvas() {
     board = [];
+    startingSet = [];
     turnCounter = 0;
     percolating = true;
     context.clearRect(0, 0, canvasWidth, canvasHeight);
 }
 
-$("#submit").click(function() {
-    rows = Number($("#rows").val());
-    cols = Number($("#cols").val());
-    s = Number($("#s_moves").val());
-    b = Number($("#b_moves").val());
-    neighbors = Number($("#neighbors").val());
-    gameType = $("#game_type").val();
-    layers = Number($("#layers").val());
-
-    resetCanvas();
-    startingSet = [];
-    buildGrid(rows, cols, layers);
-
+function initializeProperties(rows, cols, layers) {
     $("#run").prop('disabled', false);
     $("#animate").prop('disabled', false);
     $("#num_rand").prop('disabled', false);
@@ -57,6 +47,23 @@ $("#submit").click(function() {
     $("#lower_bound").append("SA bound: " + "0/" + calculateLowerBound(rows, cols, layers));
 
     $("#num_rand").val(calculateLowerBound(rows, cols, layers));
+};
+
+function readBoardData() {
+    rows = Number($("#rows").val());
+    cols = Number($("#cols").val());
+    //s = Number($("#s_moves").val());
+    //b = Number($("#b_moves").val());
+    neighbors = Number($("#neighbors").val());
+    gameType = $("#game_type").val();
+    layers = Number($("#layers").val());
+};
+
+$("#submit").click(function() {
+    readBoardData();
+    resetCanvas();
+    buildGrid(rows, cols, layers);
+    initializeProperties(rows, cols, layers);
 })
 
 function calculateLowerBound(x, y, z) {
@@ -395,6 +402,78 @@ function sandbox(e) {
     }
 }
 
+function parseFile(file) {
+    // NOTE: There is some nastiness here with \n and \r\n. Windows .txt files use \r\n, whereas Mac uses \n. The code
+    // below is written to accept \r\n only. I need to fix it to convert all newline characters to be the same.
+
+    readBoardData();
+
+    file = file.replace(/\r?\n|\r/g, '\n')
+    console.log(file)
+    console.log(file.split('\n\n'));
+
+    data = []
+
+    for (var i = 0; i < file.split('\n\n').length; i++) {
+        layerArray = [];
+        fileLayer = file.split('\n\n')[i];
+        console.log(fileLayer)
+        for (var j = 0; j < fileLayer.split('\n').length; j++) {
+            rowArray = [];
+            fileRow = fileLayer.split('\n')[j];
+            console.log(fileRow)
+            for (var k = 0; k < fileRow.split('', fileRow.length).length; k++) {
+                fileCol = fileRow.split('', fileRow.length)[k];
+                console.log(fileCol)
+                if (fileCol == 'O') {
+                    rowArray.push(0);
+                } else if (fileCol == 'X') {
+                    rowArray.push(1);
+                } else {
+                    alert("The contents of this file are not readable by this program. Please only enter files containing X's and O's.")
+                    return false;
+                };
+            };
+            layerArray.push(rowArray);
+        };
+        data.push(layerArray);
+    };
+
+    rows = Math.max(rows, data[0].length);
+    cols = Math.max(cols, data[0][0].length);
+    layers = Math.max(layers, data.length);
+
+    resetCanvas();
+    buildGrid(rows, cols, layers);
+    initializeProperties(rows, cols, layers);
+
+    return data;
+};
+
+function initializeGrid(data) {
+    for (var l = 0; l < layers; l++) {
+        for (var r = 0; r < rows; r++) {
+            for (var c = 0; c < cols; c++) {
+                if (data[l][r][c] == 1) {
+                    // color the corresponding dot
+                    // mark dot as selected
+                    boardIndex = cols*r + c;
+                    var results = getXY(board[l][boardIndex]);
+
+                    drawDot(results['x'], results['y'], results['radius'], sColor, true);
+                    board[l][boardIndex][2] = true;
+
+                    turnCounter++;
+                    $("#lower_bound").empty();
+                    $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+
+                    startingSet[l][r][c] = 1;
+                }
+            }
+        }
+    }
+};
+
 $('canvas.dots').click(function(e) {
     e.preventDefault();
     console.log(gameType)
@@ -524,4 +603,25 @@ $("#run").click(function() {
                                         };
                                     };
                                 });
-})
+});
+
+$("#upload").click(function() {
+    var file = fileupload.files[0];
+    var reader = new FileReader();
+
+    reader.readAsText(file);
+
+    reader.onload = function() {
+        console.log(reader.result);
+        data = parseFile(reader.result);
+        if (data) {
+            console.log(data);
+            initializeGrid(data);
+        };
+    };
+
+    reader.onerror = function() {
+        console.log(reader.error);
+    };
+});
+

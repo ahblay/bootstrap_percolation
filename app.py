@@ -37,13 +37,10 @@ def run_percolation():
                 if starting_set[l][i][j] == 1:
                     ss.append((l, i, j))
 
-    print(ss)
 
     g = Grid((layers, rows, cols))
     results = g.percolate(neighbors, ss)
-    print(results)
     steps = json.dumps(results[1], cls=NumpyArrayEncoder)
-    print(steps)
     return {"success": results[0], "steps": steps}
 
 

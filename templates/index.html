@@ -10,7 +10,6 @@
     <canvas class="dots"></canvas>
 
     <div class="right">
-      <label for="game_type">Game Type:</label>
       <select id="game_type">
         <option value="sandbox">Sandbox</option>
         <!--
@@ -26,18 +25,19 @@
       <label for="b_moves">Blocker Moves:</label>
       <input type="text" id="b_moves">
       -->
+      <div class="inline">
+        <label for="rows">Rows:</label>
+        <input type="text"id="rows" value="0" placeholder="Rows">
 
-      <label for="rows">Rows:</label>
-      <input type="text"id="rows" value="3">
+        <label for="cols">Columns:</label>
+        <input type="text" id="cols" value="0" placeholder="Columns">
 
-      <label for="cols">Columns:</label>
-      <input type="text" id="cols" value="12">
+        <label for="layers">Layers:</label>
+        <input type="text" id="layers" value="0" placeholder="Layers">
 
-      <label for="layers">Layers:</label>
-      <input type="text" id="layers" value="2">
-
-      <label for="neighbors">Neighbors:</label>
-      <input type="text" id="neighbors" value="3">
+        <label for="neighbors">Neighbors:</label>
+        <input type="text" id="neighbors" value="3" placeholder="Neighbors">
+      </div>
 
       <input type="submit" id="submit">
 
@@ -56,18 +56,23 @@
 
       <button type="button" id="randomize" disabled>Randomize</button>
 
+      <input id="fileupload" type="file" name="fileupload" accept=".txt, .rtf, .text">
+      <input type="submit" id="upload" value="Upload">
+
       <h2 id="lower_bound">SA bound:</h2>
     </div>
   </div>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.min.js">
-  </script>
   <script
     src="https://code.jquery.com/jquery-3.4.1.min.js"
     integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
     crossorigin="anonymous">
   </script>
+
   <!--
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.min.js">
+  </script>
+
   <script src="/static/game.js" type="text/javascript"></script>
   -->
   <script src="/static/game.js" type="text/javascript"></script>

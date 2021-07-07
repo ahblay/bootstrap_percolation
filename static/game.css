@@ -23,7 +23,7 @@ body {
 input[type=text], select {
   width: 100%;
   padding: 6px;
-  margin: 8px 0;
+  margin: 4px 0;
   display: block;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -70,3 +70,13 @@ button:disabled {
     margin: 0px !important;
 }
 
+div.inline {
+    display:grid;
+    grid-template-columns: max-content max-content;
+    grid-gap:5px;
+}
+
+div.inline label {
+    text-align:left;
+    padding-top: 10px;
+}
