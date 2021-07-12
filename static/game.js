@@ -39,6 +39,7 @@ function initializeProperties(rows, cols, layers) {
     $("#animate").prop('disabled', false);
     $("#num_rand").prop('disabled', false);
     $("#randomize").prop('disabled', false);
+    $("#download").prop('disabled', false);
 
     $("#left").prop('disabled', true);
     $("#right").prop('disabled', true);
@@ -627,5 +628,42 @@ $("#upload").click(function() {
     reader.onerror = function() {
         console.log(reader.error);
     };
+});
+
+function getTextFile() {
+    text = "";
+
+    for (i = 0; i < layers; i++) {
+        for (j = 0; j < rows * cols; j++) {
+            if (j % cols == 0 && j != 0) {
+                text = text.concat("\n")
+            }
+            if (board[i][j][2] == true) {
+                text = text.concat("X")
+            } else if (board[i][j][2] == false) {
+                text = text.concat("O")
+            }
+        }
+        if (i+1 < layers) {
+            text = text.concat("\n\n")
+        }
+    }
+    return text
+};
+
+$("#download").click(function() {
+  text = getTextFile();
+  filename = rows + "x" + cols + "x" + layers;
+
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
 });
 

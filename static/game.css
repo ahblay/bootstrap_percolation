@@ -80,3 +80,7 @@ div.inline label {
     text-align:left;
     padding-top: 10px;
 }
+
+#fileupload {
+    margin-bottom: 10px;
+}
