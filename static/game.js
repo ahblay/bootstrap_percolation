@@ -25,6 +25,7 @@ var steps = [];
 var success = false;
 var frameIndex = 0;
 var layers = 0;
+var reflect = false;
 
 function resetCanvas() {
     board = [];
@@ -40,6 +41,7 @@ function initializeProperties(rows, cols, layers) {
     $("#num_rand").prop('disabled', false);
     $("#randomize").prop('disabled', false);
     $("#download").prop('disabled', false);
+    //$("#reflect").prop('disabled', false);
 
     $("#left").prop('disabled', true);
     $("#right").prop('disabled', true);
@@ -357,45 +359,145 @@ function twoPlayer(e) {
     }
 }
 
+// TODO: Fix functionality for handling reflections. Is extremely messy and filled with conditionals.
 function sandbox(e) {
     var x = e.clientX - 10;
     var y = e.clientY - 10;
 
     var turn = sColor;
 
-    for (var l = 0; l < layers; l++) {
-        for (var i = 0; i < board[l].length; i++) {
-            if (board[l][i][0][0] <= x && x <= board[l][i][0][1]) {
-                if (board[l][i][1][0] <= y && y <= board[l][i][1][1]) {
+    if (reflect) {
+        for (var i = 0; i < board[0].length; i++) {
+            if (board[0][i][0][0] <= x && x <= board[0][i][0][1]) {
+                if (board[0][i][1][0] <= y && y <= board[0][i][1][1]) {
                     // if already chosen, color gray
-                    if (board[l][i][2]) {
+                    if (board[0][i][2]) {
                         console.log("uncolor this dot")
-                        var results = getXY(board[l][i]);
-                        drawDot(results['x'], results['y'], results['radius'], baseColor);
 
-                        turnCounter--;
+                        var results_top = getXY(board[0][i]);
+                        var results_bottom = getXY(board[layers - 1][board[0].length - 1 - i]);
+
+                        drawDot(results_top['x'], results_top['y'], results_top['radius'], baseColor);
+                        drawDot(results_bottom['x'], results_bottom['y'], results_bottom['radius'], baseColor);
+
+                        if (board[layers - 1][board[0].length - 1 - i][2]) {
+                            turnCounter = turnCounter - 2;
+                        } else {
+                            turnCounter = turnCounter - 1;
+                        }
+
                         $("#lower_bound").empty();
                         $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
 
                         rowIndex = Math.floor(i/cols);
                         colIndex = i % cols;
-                        startingSet[l][rowIndex][colIndex] = 0;
-                        board[l][i][2] = false;
+                        startingSet[0][rowIndex][colIndex] = 0;
+                        startingSet[layers - 1][rows - 1 - rowIndex][cols - 1 - colIndex] = 0;
+
+                        board[0][i][2] = false;
+                        board[layers - 1][board[0].length - 1 - i][2] = false;
                     }
 
                     else {
-                        var results = getXY(board[l][i]);
+                        var results_top = getXY(board[0][i]);
+                        var results_bottom = getXY(board[layers - 1][board[0].length - 1 - i]);
 
-                        drawDot(results['x'], results['y'], results['radius'], turn, true);
-                        board[l][i][2] = true;
+                        drawDot(results_top['x'], results_top['y'], results_top['radius'], turn, true);
+                        drawDot(results_bottom['x'], results_bottom['y'], results_bottom['radius'], turn, true);
 
-                        turnCounter++;
+                        if (board[layers - 1][board[0].length - 1 - i][2]) {
+                            turnCounter = turnCounter + 1;
+                        } else {
+                            turnCounter = turnCounter + 2;
+                        }
+
+                        board[0][i][2] = true;
+                        board[layers - 1][board[0].length - 1 - i][2] = true;
+
                         $("#lower_bound").empty();
                         $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
 
                         rowIndex = Math.floor(i/cols);
                         colIndex = i % cols;
-                        startingSet[l][rowIndex][colIndex] = 1;
+                        startingSet[0][rowIndex][colIndex] = 1;
+                        startingSet[layers - 1][rows - 1 - rowIndex][cols - 1 - colIndex] = 1
+                    }
+                }
+            }
+        }
+        for (var l = 1; l < layers - 1; l++) {
+            for (var i = 0; i < board[l].length; i++) {
+                if (board[l][i][0][0] <= x && x <= board[l][i][0][1]) {
+                    if (board[l][i][1][0] <= y && y <= board[l][i][1][1]) {
+                        // if already chosen, color gray
+                        if (board[l][i][2]) {
+                            console.log("uncolor this dot")
+                            var results = getXY(board[l][i]);
+                            drawDot(results['x'], results['y'], results['radius'], baseColor);
+
+                            turnCounter--;
+                            $("#lower_bound").empty();
+                            $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+
+                            rowIndex = Math.floor(i/cols);
+                            colIndex = i % cols;
+                            startingSet[l][rowIndex][colIndex] = 0;
+                            board[l][i][2] = false;
+                        }
+
+                        else {
+                            var results = getXY(board[l][i]);
+
+                            drawDot(results['x'], results['y'], results['radius'], turn, true);
+                            board[l][i][2] = true;
+
+                            turnCounter++;
+                            $("#lower_bound").empty();
+                            $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+
+                            rowIndex = Math.floor(i/cols);
+                            colIndex = i % cols;
+                            startingSet[l][rowIndex][colIndex] = 1;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for (var l = 0; l < layers; l++) {
+            for (var i = 0; i < board[l].length; i++) {
+                if (board[l][i][0][0] <= x && x <= board[l][i][0][1]) {
+                    if (board[l][i][1][0] <= y && y <= board[l][i][1][1]) {
+                        // if already chosen, color gray
+                        if (board[l][i][2]) {
+                            console.log("uncolor this dot")
+                            var results = getXY(board[l][i]);
+                            drawDot(results['x'], results['y'], results['radius'], baseColor);
+
+                            turnCounter--;
+                            $("#lower_bound").empty();
+                            $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+
+                            rowIndex = Math.floor(i/cols);
+                            colIndex = i % cols;
+                            startingSet[l][rowIndex][colIndex] = 0;
+                            board[l][i][2] = false;
+                        }
+
+                        else {
+                            var results = getXY(board[l][i]);
+
+                            drawDot(results['x'], results['y'], results['radius'], turn, true);
+                            board[l][i][2] = true;
+
+                            turnCounter++;
+                            $("#lower_bound").empty();
+                            $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+
+                            rowIndex = Math.floor(i/cols);
+                            colIndex = i % cols;
+                            startingSet[l][rowIndex][colIndex] = 1;
+                        }
                     }
                 }
             }
@@ -431,7 +533,7 @@ function parseFile(file) {
                 } else if (fileCol == 'X') {
                     rowArray.push(1);
                 } else {
-                    alert("The contents of this file are not readable by this program. Please only enter files containing X's and O's.")
+                    alert("The contents of this file are not readable by this program. Please enter files containing only X's and O's.")
                     return false;
                 };
             };
@@ -456,23 +558,67 @@ function parseFile(file) {
 };
 
 function initializeGrid(data) {
-    for (var l = 0; l < layers; l++) {
-        for (var r = 0; r < rows; r++) {
-            for (var c = 0; c < cols; c++) {
-                if (data[l][r][c] == 1) {
+    if (reflect) {
+        for (var l = 0; l < layers - 1; l++) {
+            for (var r = 0; r < rows; r++) {
+                for (var c = 0; c < cols; c++) {
+                    if (data[l][r][c] == 1) {
+                        // color the corresponding dot
+                        // mark dot as selected
+                        boardIndex = cols*r + c;
+                        var results = getXY(board[l][boardIndex]);
+
+                        drawDot(results['x'], results['y'], results['radius'], sColor, true);
+                        board[l][boardIndex][2] = true;
+
+                        turnCounter++;
+                        $("#lower_bound").empty();
+                        $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+
+                        startingSet[l][r][c] = 1;
+                    }
+                }
+            }
+        }
+        // Reflects the first layer onto the bottom layer.
+        for (var r = rows - 1; r >= 0; r--) {
+            for (var c = cols - 1; c >= 0; c--) {
+                if (data[0][r][c] == 1) {
                     // color the corresponding dot
                     // mark dot as selected
-                    boardIndex = cols*r + c;
-                    var results = getXY(board[l][boardIndex]);
+                    boardIndex = -cols*(r-rows+1) - (c-cols+1);
+                    var results = getXY(board[layers - 1][boardIndex]);
 
                     drawDot(results['x'], results['y'], results['radius'], sColor, true);
-                    board[l][boardIndex][2] = true;
+                    board[layers - 1][boardIndex][2] = true;
 
                     turnCounter++;
                     $("#lower_bound").empty();
                     $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
 
-                    startingSet[l][r][c] = 1;
+                    startingSet[layers - 1][-r+rows-1][-c+cols-1] = 1;
+                }
+            }
+        }
+    } else {
+        for (var l = 0; l < layers; l++) {
+            for (var r = 0; r < rows; r++) {
+                for (var c = 0; c < cols; c++) {
+                    if (data[l][r][c] == 1) {
+                        // color the corresponding dot
+                        // mark dot as selected
+                        boardIndex = cols*r + c;
+                        var results = getXY(board[l][boardIndex]);
+
+                        drawDot(results['x'], results['y'], results['radius'], sColor, true);
+                        board[l][boardIndex][2] = true;
+
+                        turnCounter++;
+                        $("#lower_bound").empty();
+                        $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+
+                        startingSet[l][r][c] = 1;
+                    }
                 }
             }
         }
@@ -628,6 +774,14 @@ $("#upload").click(function() {
     reader.onerror = function() {
         console.log(reader.error);
     };
+});
+
+$("#reflect").change(function() {
+    if (this.checked) {
+        reflect = true;
+    } else {
+        reflect = false;
+    }
 });
 
 function getTextFile() {
