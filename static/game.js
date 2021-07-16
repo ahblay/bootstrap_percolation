@@ -634,6 +634,7 @@ $('canvas.dots').click(function(e) {
     } else if (gameType == "single_player") {
         onePlayer(e);
     } else {
+        $("#right").prop('disabled', true);
         sandbox(e);
     }
 
