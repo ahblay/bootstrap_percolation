@@ -30,18 +30,48 @@ def run_percolation():
     print(neighbors)
 
     ss = []
-
     for l in range(layers):
         for i in range(rows):
             for j in range(cols):
                 if starting_set[l][i][j] == 1:
                     ss.append((l, i, j))
 
-
     g = Grid((layers, rows, cols))
     results = g.percolate(neighbors, ss)
     steps = json.dumps(results[1], cls=NumpyArrayEncoder)
     return {"success": results[0], "steps": steps}
+
+
+@app.route('/improve', methods=['POST'])
+def improve():
+    starting_set = json.loads(request.form["startingSet"])
+    num_dots = json.loads(request.form["turnCounter"])
+    rows = json.loads(request.form["rows"])
+    cols = json.loads(request.form["cols"])
+    layers = json.loads(request.form["layers"])
+    neighbors = json.loads(request.form["neighbors"])
+
+    ss = []
+    for l in range(layers):
+        for i in range(rows):
+            for j in range(cols):
+                if starting_set[l][i][j] == 1:
+                    ss.append((l, i, j))
+
+    # we need to handle a couple of cases:
+    #
+    # 1. if num_dots == lower_bound: swap dots until the resulting set percolates further (perhaps employ some of Jon's/
+    # Peter's heuristics to ensure this process moves quickly)
+    #
+    # 2. if num_dots > lower_bound AND set percolates: check if removing any dot still permits percolation. if not,
+    # remove dot that maximizes infected area
+    #
+    # 3. all remaining cases should not be handled
+
+    g = Grid((layers, rows, cols))
+    result = g.improve(ss, neighbors, num_dots)
+
+    return {"success": result[0], "changes": result[1], "message": result[2]}
 
 
 if __name__ == '__main__':

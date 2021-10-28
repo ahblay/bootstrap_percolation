@@ -32,6 +32,7 @@ function resetCanvas() {
     startingSet = [];
     turnCounter = 0;
     percolating = true;
+    success = false;
     context.clearRect(0, 0, canvasWidth, canvasHeight);
 }
 
@@ -42,6 +43,7 @@ function initializeProperties(rows, cols, layers) {
     $("#randomize").prop('disabled', false);
     $("#download").prop('disabled', false);
     //$("#reflect").prop('disabled', false);
+    $("#improve").prop('disabled', false);
 
     $("#left").prop('disabled', true);
     $("#right").prop('disabled', true);
@@ -50,6 +52,8 @@ function initializeProperties(rows, cols, layers) {
     $("#lower_bound").append("SA bound: " + "0/" + calculateLowerBound(rows, cols, layers));
 
     $("#num_rand").val(calculateLowerBound(rows, cols, layers));
+
+
 };
 
 function readBoardData() {
@@ -327,7 +331,7 @@ function beginPercolation(success, steps) {
     percolating = true;
     if (steps.length > 1) {
         imgData = context.getImageData(0, 0, canvasWidth, canvasHeight);
-        interval = window.setInterval(function() {runPercolation(steps)}, 600);
+        interval = window.setInterval(function() {runPercolation(steps)}, 150);
     };
 };
 
@@ -505,6 +509,24 @@ function sandbox(e) {
     }
 }
 
+function applyChanges(changes) {
+    for (var i = 0; i < changes.length; i++) {
+        toRemove = changes[i][0];
+        toAdd = changes[i][1];
+        lRemove = toRemove[0];
+        rRemove = toRemove[1];
+        cRemove = toRemove[2];
+
+        var results = getXY(board[lRemove][rRemove*cols + cRemove])
+        drawDot(results['x'], results['y'], results['radius'], baseColor);
+        turnCounter--;
+        $("#lower_bound").empty();
+        $("#lower_bound").append("SA bound: " + turnCounter + "/" + calculateLowerBound(rows, cols, layers))
+        startingSet[lRemove][rRemove][cRemove] = 0;
+        board[lRemove][rRemove*cols + cRemove][2] = false;
+    }
+}
+
 function parseFile(file) {
     // NOTE: There is some nastiness here with \n and \r\n. Windows .txt files use \r\n, whereas Mac uses \n. The code
     // below is written to accept \r\n only. I need to fix it to convert all newline characters to be the same.
@@ -645,7 +667,8 @@ $('canvas.dots').click(function(e) {
     }
 
     if (turnCounter >= rows * cols) {
-        beginPercolation();
+        // Commented out as there is no reason to begin percolation at this point vvv
+        // beginPercolation();
     }
 });
 
@@ -662,8 +685,8 @@ $("#randomize").click(function() {
     numRand = Number($("#num_rand").val());
     counter = 0;
     while (counter < numRand) {
-        success = drawRandomDot(sColor);
-        if (success) {
+        drawn = drawRandomDot(sColor);
+        if (drawn) {
             counter++;
         };
     };
@@ -822,3 +845,25 @@ $("#download").click(function() {
   document.body.removeChild(element);
 });
 
+$("#improve").click(function() {
+    if (turnCounter < Math.ceil(calculateLowerBound(rows, cols, layers))) {
+        alert("You cannot improve a set below the lower bound. It is too computationally expensive.");
+        return;
+    }
+
+    // POST starting_set to back end
+
+    $.post("/improve", {"startingSet": JSON.stringify(startingSet),
+                        "turnCounter": turnCounter,
+                        "rows": rows,
+                        "cols": cols,
+                        "layers": layers,
+                        "neighbors": neighbors})
+                        .done(function(data) {
+                            applyChanges(data["changes"]);
+                            if (!data["success"]) {
+                                alert(data["message"]);
+                            }
+                        });
+
+});

@@ -27,16 +27,16 @@
       -->
       <div class="inline">
         <label for="rows">Rows:</label>
-        <input type="text"id="rows" value="0" placeholder="Rows">
+        <input type="text"id="rows" value="" placeholder="Rows">
 
         <label for="cols">Columns:</label>
-        <input type="text" id="cols" value="0" placeholder="Columns">
+        <input type="text" id="cols" value="" placeholder="Columns">
 
         <label for="layers">Layers:</label>
-        <input type="text" id="layers" value="0" placeholder="Layers">
+        <input type="text" id="layers" value="" placeholder="Layers">
 
         <label for="neighbors">Neighbors:</label>
-        <input type="text" id="neighbors" value="3" placeholder="Neighbors">
+        <input type="text" id="neighbors" value="" placeholder="Neighbors">
       </div>
 
       <input type="submit" id="submit">
@@ -51,10 +51,14 @@
         <button class="arrow" id="right" disabled>&#8250;</button>
       </p>
 
+      <!--
       <label for="neighbors">How many dots?</label>
       <input type="text" id="num_rand" value="" disabled>
 
       <button type="button" id="randomize" disabled>Randomize</button>
+      -->
+
+      <button type="button" id="improve" disabled>Improve percolation</button>
 
       <input type="checkbox" id="reflect" value="true">
       <label for="reflect">Reflect top layer</label>
