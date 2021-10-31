@@ -36,7 +36,7 @@
         <input type="text" id="layers" value="" placeholder="Layers">
 
         <label for="neighbors">Neighbors:</label>
-        <input type="text" id="neighbors" value="" placeholder="Neighbors">
+        <input type="text" id="neighbors" value="3" placeholder="Neighbors">
       </div>
 
       <input type="submit" id="submit">
@@ -60,6 +60,8 @@
 
       <button type="button" id="improve" disabled>Improve percolation</button>
 
+      <button type="button" id="showsets">Show optimal sets</button>
+
       <input type="checkbox" id="reflect" value="true">
       <label for="reflect">Reflect top layer</label>
 
@@ -71,6 +73,13 @@
       <h2 id="lower_bound">SA bound:</h2>
     </div>
   </div>
+
+  <div id="setsmodal" class="modal">
+    <div class="modal-content" id="sets-modal-content">
+      <span id="exitsets" class="close">&times;</span>
+    </div>
+  </div>
+
   <script
     src="https://code.jquery.com/jquery-3.4.1.min.js"
     integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="

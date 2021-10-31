@@ -2,8 +2,36 @@ from flask import Flask, render_template, request, json
 from percolation import Grid
 from json import JSONEncoder
 import numpy
+from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
+import os
 
 app = Flask(__name__)
+
+load_dotenv()
+
+SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
+    username=os.environ.get("db_user"),
+    password=os.environ.get("db_password"),
+    hostname=os.environ.get("db_host"),
+    databasename=os.environ.get("db_name"),
+)
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
+
+
+class PercolatingSets(db.Model):
+
+    __tablename__ = "percolating_sets"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(16))
+    neighbors = db.Column(db.Integer)
+    starting_set = db.Column(db.Text)
+    shape = db.Column(db.Text)
 
 
 class NumpyArrayEncoder(JSONEncoder):
@@ -39,6 +67,22 @@ def run_percolation():
     g = Grid((layers, rows, cols))
     results = g.percolate(neighbors, ss)
     steps = json.dumps(results[1], cls=NumpyArrayEncoder)
+
+    if results[0] and len(ss) == g.lower_bound:
+        starting_set = request.form["startingSet"]
+        name = f"{rows}x{cols}x{layers}"
+        query = PercolatingSets.query.filter_by(name=name).all()
+        if query:
+            for entry in query:
+                if entry.starting_set == starting_set:
+                    return {"success": results[0], "steps": steps}
+        shape = json.dumps((layers, rows, cols))
+        db_entry = PercolatingSets(name=name,
+                                   neighbors=neighbors,
+                                   starting_set=starting_set,
+                                   shape=shape)
+        db.session.add(db_entry)
+        db.session.commit()
     return {"success": results[0], "steps": steps}
 
 
@@ -72,6 +116,22 @@ def improve():
     result = g.improve(ss, neighbors, num_dots)
 
     return {"success": result[0], "changes": result[1], "message": result[2]}
+
+
+@app.route('/display_set', methods=['POST'])
+def display_set():
+    id = json.loads(request.form["id"])
+    print(id)
+    set = PercolatingSets.query.filter_by(id=id).first()
+    return {"starting_set": set.starting_set, "neighbors": set.neighbors, "shape": set.shape}
+
+
+@app.route('/get_optimal_sets', methods=['GET'])
+def get_sets():
+    sets = []
+    for set in PercolatingSets.query.all():
+        sets.append((set.name, set.id))
+    return {'sets': sets}
 
 
 if __name__ == '__main__':

@@ -830,19 +830,19 @@ function getTextFile() {
 };
 
 $("#download").click(function() {
-  text = getTextFile();
-  filename = rows + "x" + cols + "x" + layers;
+    text = getTextFile();
+    filename = rows + "x" + cols + "x" + layers;
 
-  var element = document.createElement('a');
-  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-  element.setAttribute('download', filename);
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
 
-  element.style.display = 'none';
-  document.body.appendChild(element);
+    element.style.display = 'none';
+    document.body.appendChild(element);
 
-  element.click();
+    element.click();
 
-  document.body.removeChild(element);
+    document.body.removeChild(element);
 });
 
 $("#improve").click(function() {
@@ -867,3 +867,58 @@ $("#improve").click(function() {
                         });
 
 });
+
+$("#showsets").click(function() {
+    // query all optimal percolating sets and display links their links.
+    $.get("/get_optimal_sets", function(data) {
+        console.log(data);
+        buildModalContent(data["sets"]);
+    });
+    $("#setsmodal").css("display", "block");
+});
+
+function buildModalContent(names) {
+    $("#sets-modal-content").children().not(':first').remove();
+    for (i = 0; i < names.length; i++) {
+        name = names[i][0];
+        id = names[i][1];
+        var $set = $("<a>", {text: name,
+                             href: "#",
+                             id: id,
+                             "class": "set",
+                             click: function() {
+                                id = this.id;
+                                console.log(this)
+                                $.post("/display_set", {"id": JSON.stringify(id)}).done(function(data){
+                                    ss = JSON.parse(data['starting_set']);
+                                    neighbors = JSON.parse(data['neighbors']);
+                                    shape = JSON.parse(data['shape']);
+                                    layers = shape[0];
+                                    rows = shape[1];
+                                    cols = shape[2];
+
+                                    $("#setsmodal").css("display", "none");
+
+                                    resetCanvas();
+                                    buildGrid(rows, cols, layers);
+                                    initializeProperties(rows, cols, layers);
+
+                                    $('#rows').val(rows);
+                                    $('#cols').val(cols);
+                                    $('#layers').val(layers);
+                                    initializeGrid(ss);
+                                });
+                             }
+                             });
+        console.log($set);
+        $("#sets-modal-content").append($set);
+        if (i < names.length -1) {
+            $("#sets-modal-content").append("<br><br>");
+        }
+    }
+}
+
+$("#exitsets").click(function() {
+    $("#setsmodal").css("display", "none");
+});
+
